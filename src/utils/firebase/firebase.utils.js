@@ -34,4 +34,23 @@ const firebaseConfig = {
     const userSnapshot = await getDoc(userDocRef); //The snapshot allows us to check whether not there's an instance that exists inside of the DB and also allows us to access the data.
     console.log(userSnapshot);
     console.log(userSnapshot.exists()); //Check if reference and the data that poionted by this reference is exists in DB.
+
+    //if user data does not exist create / set the document with the data from userAuth in my collection
+    if(!userSnapshot.exists()){
+        const { displayName, email } = userAuth;
+        const createdAt = new Date();
+        
+        try{
+            await setDoc(userDocRef, {
+                displayName,
+                email,
+                createdAt
+            })
+        } catch (error){
+            console.log('error creating the user', error.message);
+        }
+    }
+
+    return userDocRef;
+
   }
