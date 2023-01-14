@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app'; 
-import { getAuth, signInWithRedirect, signInWithPopup, GoogleAuthProvider } from 'firebase/auth'
+import { getAuth, signInWithRedirect, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword } from 'firebase/auth'
 import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore' //getDoc, setDoc = Getting the document data and setting the document data
 
 
@@ -15,18 +15,20 @@ const firebaseConfig = {
 
   const firebaseApp = initializeApp(firebaseConfig);
 
-  const provider = new GoogleAuthProvider(); //GoogleAuthProvider is a class that we get from Firebase authentication and this is connected with Google Auth itself. 
+  const googleProvider = new GoogleAuthProvider(); //GoogleAuthProvider is a class that we get from Firebase authentication and this is connected with Google Auth itself.  There are many other providers like Facebook, Github etc. 
   
-  provider.setCustomParameters({
+  googleProvider.setCustomParameters({
     prompt: "select_account"
   });
 
   export const auth = getAuth();
-  export const sigInWithGooglePopup = () => signInWithPopup(auth, provider);
+  export const sigInWithGooglePopup = () => signInWithPopup(auth, googleProvider);
+  export const sigInWithGoogleRedirect = () => signInWithRedirect(auth, googleProvider);
 
   export const db = getFirestore();
 
-  export const createUserDocumentFromAuth = async (userAuth) => {
+  export const createUserDocumentFromAuth = async (userAuth, additionalInformation = {}) => {
+    if(!userAuth) return;
     const userDocRef = doc(db, 'users', userAuth.uid); //User document reference
 
     console.log(userDocRef);
@@ -44,7 +46,8 @@ const firebaseConfig = {
             await setDoc(userDocRef, {
                 displayName,
                 email,
-                createdAt
+                createdAt,
+                ...additionalInformation
             })
         } catch (error){
             console.log('error creating the user', error.message);
@@ -52,5 +55,9 @@ const firebaseConfig = {
     }
 
     return userDocRef;
+  }
 
+  export const createAuthUserWithEmailAndPassword = async (email, password) => {
+    if(!email || !password) return;
+    return await createUserWithEmailAndPassword(auth, email, password);
   }
